@@ -1,41 +1,55 @@
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from agno.db.in_memory import InMemoryDB
+from agno.db.sqlite import SqliteDb
 from dotenv import load_dotenv
 
-# because of some problem in agno version not able to execute code properly
+# used sqlite db instead of in memory and it is working fine
+# openai model is paid so nothing will be stored in db
 
+# now we can also access previous messages without giving input again as we have added memory to agent
 
-# load the api keys from .env file
+# load the api key to env
 load_dotenv()
 
 # create the model
-# this gpt model is paid so it won't give any output
 llm = OpenAIChat(id="gpt-4.1-mini")
-# Session id for giving memory to agent
 
-session_id = "session_1"
-# Create a Database
-# this db is only used for demo
-db = InMemoryDB()
+# add session id
+session_id = "session_123"
+
+# create a database
+db = SqliteDb(db_file="demo.db")
 
 # create the agent
 agent = Agent(
     model=llm,
     db=db,
+    name="agent_with_memory",
     session_id=session_id,
     add_history_to_context=True,
-    num_history_runs=3,
-    name="Agent with Memory",
+    num_history_runs=10,
     stream=True,
     markdown=True,
 )
 
-# give inputs to the agent
+# # # give inputs to the agent
+# agent.print_response(input="Hi, my name is Himanshu")
 
-agent.print_response(input="What is the capital of France?")
+# # agent.print_response(input="Can you tell me my name?")
 
-agent.print_response(input="What is the capital of Germany?")
+# agent.print_response(input="tell me a joke that is funny")
+
+# agent.print_response(input="generate a paragraph on Gen AI")
+
+# agent.print_response(input="Can you tell me my name?")
+
+agent.print_response(
+    input="can you tell me on which topic i asked you to generate a paragraph?",
+    session_id=session_id,
+)
+
+# print(agent.session_id)
+
 messages = agent.get_chat_history(session_id)
 
 for message in messages:
@@ -43,4 +57,4 @@ for message in messages:
     if role == "system":
         continue
     else:
-        print(f"Role:{role} , Message: {content}")
+        print(f"Role: {role}, Message: {content}")
